@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cricket Match Predictor</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;   justify-content: center;
+      align-items: center;
+    }
+    .container {
+      max-width: 900px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2rem 3rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
+    h1 {
+      text-align: center;
+      color: #ffd700;
+      margin-bottom: 2rem;
+    }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      display: block;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      box-shadow: 0 0 5px #ffd700;
+    }
+    .form-group {
+      flex: 1 1 40%;
+      min-width: 260px;
+    }
+    .full {
+      flex: 1 1 100%;
+    }
+    button {
+      background-color: #ffd700;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      padding: 0.8rem 1.2rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: 0.3s ease-in-out;
+      margin: 1rem auto 0;
+      display: block;
+    }
+    button:hover {
+      background-color: #ffcc00;
+    }
+    .output {
+      background: rgba(255, 255, 255, 0.2);
+      margin-top: 2rem;
+      padding: 1.2rem;
+      border-radius: 12px;
+      color: #fff;
+    }
+    #predictionText {
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏏 Cricket Match Predictor</h1>
+    <form id="matchForm">
+      <div class="form-group">
+        <label for="teamA">Team A</label>
+        <input type="text" id="teamA" required />
+      </div>
+      <div class="form-group">
+        <label for="teamB">Team B</label>
+        <input type="text" id="teamB" required />
+      </div>
+      <div class="form-group">
+        <label for="venue">Venue</label>
+        <input type="text" id="venue" required />
+      </div>
+      <div class="form-group">
+        <label for="pitch">Pitch Type</label>
+        <select id="pitch">
+          <option value="dry">Dry</option>
+          <option value="green">Green</option>
+          <option value="dusty">Dusty</option>
+          <option value="flat">Flat</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="formA">Team A Recent Form (W/L)</label>
+        <input type="text" id="formA" placeholder="W,L,W,W,L" />
+      </div>
+      <div class="form-group">
+        <label for="formB">Team B Recent Form (W/L)</label>
+        <input type="text" id="formB" placeholder="L,W,L,L,W" />
+      </div>
+      <div class="form-group full">
+        <label for="players">Key Players (A & B)</label>
+        <textarea id="players" rows="2" placeholder="Team A: Kohli, Bumrah; Team B: Smith, Starc"></textarea>
+      </div>
+      <button type="submit">Predict Match</button>
+    </form>
+    <div class="output" id="predictionOutput">
+      <h2>Prediction</h2>
+      <p id="predictionText">Enter details and hit "Predict Match"</p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("matchForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const teamA = document.getElementById("teamA").value;
+      const teamB = document.getElementById("teamB").value;
+      const venue = document.getElementById("venue").value;
+      const pitch = document.getElementById("pitch").value;
+      const formA = document.getElementById("formA").value;
+      const formB = document.getElementById("formB").value;
+      const players = document.getElementById("players").value;
+
+      const prompt = `Predict the winner of a cricket match based on the following:
+Match: ${teamA} vs ${teamB}
+Venue: ${venue}
+Pitch: ${pitch}
+Form:
+${teamA}: ${formA}
+${teamB}: ${formB}
+Key Players:
+${players}`;
+
+      document.getElementById("predictionText").innerText = "Loading prediction...";
+
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer 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",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-3.5-turbo",
+            messages: [
+              { role: "system", content: "You are a cricket match prediction expert." },
+              { role: "user", content: prompt }
+            ]
+          })
+        });
+
+        const data = await response.json();
+        const result = data.choices?.[0]?.message?.content || "Prediction could not be retrieved.";
+        document.getElementById("predictionText").innerText = result;
+
+      } catch (error) {
+        console.error("Prediction error:", error);
+        document.getElementById("predictionText").innerText = "Error getting prediction.";
+      }
+    });
+  </script>
+</body>
+</html>
